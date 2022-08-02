@@ -1,0 +1,6 @@
+[submodule "src/ImGui.NET"]
+	path = src/ImGui.NET
+	url = https://github.com/mellinoe/ImGui.NET.git
+[submodule "src/pemsa-pinvoke"]
+	path = src/pemsa-pinvoke
+	url = https://github.com/egordorichev/pemsa-pinvoke.git
