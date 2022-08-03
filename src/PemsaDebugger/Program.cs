@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Numerics;
 using Veldrid;
 using Veldrid.Sdl2;
@@ -16,26 +17,35 @@ class Program
     // UI state
     private static Vector3 _clearColor = new Vector3(0.45f, 0.55f, 0.6f);
     private static bool _showDemoWindow = false;
-    private static EmuState _pemsaEmuState = new EmuState
+    public static EmuState _pemsaEmuState = new EmuState
     {
         EmuHandle = IntPtr.Zero,
         CartName = "celeste.p8",
+        IsRunning = false,
         Gui = new EmuState.GuiState
         {
             ZoomMultiplier = 2.5f,
-            ZoomMultiplierMin = 1.75f,
-            ZoomMultiplierMax = 6f,
-            ZoomMultiplierStep = 0.25f
+            ZoomMultiplierMin = 2f,
+            ZoomMultiplierMax = 6f
         },
         Graphics = new EmuState.GraphicsState
         {
             SurfaceTexturePtr = IntPtr.Zero,
             SurfaceTextureData = new uint[0x2000 * 2],
             SurfaceTexture = null
+        },
+        Input = new EmuState.InputState
+        {
+            ButtonsDown = new bool[EmuState.InputState.PlayerCount, EmuState.InputState.ButtonCount],
+            ButtonsPressed = new bool[EmuState.InputState.PlayerCount, EmuState.InputState.ButtonCount],
+            MousePosition = new(0, 0),
+            MouseButtonsMask = 0,
+            IsAnyKeyDown = false,
+            LastKeyDown = String.Empty
         }
     };
-    public static GraphicsUnit GfxUnit = new(_pemsaEmuState);
-    public static InputUnit InpUnit = new(_pemsaEmuState);
+    public static GraphicsUnit _gfxUnit = new();
+    public static InputUnit _inputUnit = new();
     static void Main(string[] args)
     {
         // Create window, GraphicsDevice, and all resources necessary
@@ -56,21 +66,21 @@ class Program
         _controller = new Gui.ImGuiController(_gd, _gd.MainSwapchain.Framebuffer.OutputDescription, _window.Width, _window.Height);
 
         _pemsaEmuState.EmuHandle = Native.AllocateEmulator(
-            GfxUnit.Flip,
-            GfxUnit.CreateSurface,
-            GfxUnit.GetFps,
-            GfxUnit.Render,
+            _gfxUnit.Flip,
+            _gfxUnit.CreateSurface,
+            _gfxUnit.GetFps,
+            _gfxUnit.Render,
 
-            InpUnit.IsButtonDown,
-            InpUnit.IsButtonPressed,
-            InpUnit.UpdateInput,
-            InpUnit.GetMouseX,
-            InpUnit.GetMouseY,
-            InpUnit.GetMouseMask,
-            InpUnit.ReadKey,
-            InpUnit.HasKey,
-            InpUnit.ResetInput,
-            InpUnit.GetClipboardText,
+            _inputUnit.IsButtonDown,
+            _inputUnit.IsButtonPressed,
+            _inputUnit.UpdateInput,
+            _inputUnit.GetMouseX,
+            _inputUnit.GetMouseY,
+            _inputUnit.GetMouseMask,
+            _inputUnit.ReadKey,
+            _inputUnit.HasKey,
+            _inputUnit.ResetInput,
+            _inputUnit.GetClipboardText,
 
             false
         );
@@ -83,15 +93,23 @@ class Program
             if (!_window.Exists)
                 break;
 
-            _controller.Update(1f / 60f, snapshot);
+            _inputUnit.Update(ref _pemsaEmuState);
+            _controller.Update(2f / 60f, snapshot);
+            if (_pemsaEmuState.IsRunning)
+                Native.UpdateEmulator(_pemsaEmuState.EmuHandle, ImGui.GetIO().DeltaTime/2);
 
             SubmitUI();
 
             _cl.Begin();
             _cl.SetFramebuffer(_gd.MainSwapchain.Framebuffer);
             _cl.ClearColorTarget(0, new RgbaFloat(_clearColor.X, _clearColor.Y, _clearColor.Z, 1f));
+
+            if (_pemsaEmuState.IsRunning)
+                Native.Render(_pemsaEmuState.EmuHandle);
             _controller.Render(_gd, _cl);
+
             _cl.End();
+
             _gd.SubmitCommands(_cl);
             _gd.SwapBuffers(_gd.MainSwapchain);
         }
@@ -113,12 +131,9 @@ class Program
             ImGui.EndMainMenuBar();
         }
 
-        Gui.Windows.PemsaEmu(_pemsaEmuState);
+        Gui.Windows.PemsaEmu(ref _pemsaEmuState);
 
         if (_showDemoWindow)
             ImGui.ShowDemoWindow(ref _showDemoWindow);
-
-        ImGuiIOPtr io = ImGui.GetIO();
-        io.DeltaTime = 2f;
     }
 }

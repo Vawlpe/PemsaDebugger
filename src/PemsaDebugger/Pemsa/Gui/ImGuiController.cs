@@ -63,6 +63,7 @@ public class ImGuiController : IDisposable
         var fonts = ImGui.GetIO().Fonts;
         ImGui.GetIO().Fonts.AddFontDefault();
         ImGui.GetIO().BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
+        ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 
         CreateDeviceResources(gd, outputDescription);
         SetKeyMappings();

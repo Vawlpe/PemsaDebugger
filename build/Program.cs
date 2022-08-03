@@ -21,12 +21,14 @@ public class BuildContext : FrostingContext
 {
     public string MsBuildConfiguration { get; set; }
     public string Framework { get; set; }
+    public string Project { get; set; }
 
     public BuildContext(ICakeContext context)
         : base(context)
     {
         MsBuildConfiguration = context.Argument("configuration", "Debug");
         Framework = context.Argument("framework", "net6.0");
+        Project = context.Argument("project", "PemsaDebugger");
     }
 }
 
@@ -35,8 +37,8 @@ public sealed class CleanTask : FrostingTask<BuildContext>
 {
     public override void Run(BuildContext context)
     {
-        context.CleanDirectory($"../src/PemsaDebug/bin");
-        context.CleanDirectory($"../src/PemsaDebug/obj");
+        context.CleanDirectory($"../src/{context.Project}/bin");
+        context.CleanDirectory($"../src/{context.Project}/obj");
     }
 }
 
@@ -49,14 +51,14 @@ public sealed class BuildNativePemsaTask : FrostingTask<BuildContext>
         CMakeAliases.CMake(context, new CMakeSettings
         {
             SourcePath = "../src/pemsa-pinvoke",
-            OutputPath = "../src/PemsaDebug/bin/native/pemsa-invoke"
+            OutputPath = $"../src/{context.Project}/bin/native/pemsa-invoke"
         });
         CMakeAliases.CMakeBuild(context, new CMakeBuildSettings 
         {
-            BinaryPath = "../src/PemsaDebug/bin/native/pemsa-invoke",
+            BinaryPath = $"../src/{context.Project}/bin/native/pemsa-invoke",
             CleanFirst = true,
         });
-        context.CopyFiles("../src/pemsa-pinvoke/dist/*", $"../src/PemsaDebug/bin/native");
+        context.CopyFiles("../src/pemsa-pinvoke/dist/*", $"../src/{context.Project}/bin/native");
     }
 }
 
@@ -67,18 +69,18 @@ public sealed class BuildTask : FrostingTask<BuildContext>
     public override void Run(BuildContext context)
     {
         context.CopyFiles("../src/ImGui.NET/deps/cimgui/" +
-            (context.IsRunningOnLinux()        ? "linux-x64/*"
+            (context.IsRunningOnLinux()    ? "linux-x64/*"
             : context.IsRunningOnWindows() ? "win-x64/*"
             : "osx/*"
-            ), "../src/PemsaDebug/bin/native/"
+            ), $"../src/{context.Project}/bin/native/"
         );
-        context.DotNetBuild("../src/PemsaDebug/PemsaDebug.csproj", new DotNetBuildSettings
+        context.DotNetBuild($"../src/{context.Project}/{context.Project}.csproj", new DotNetBuildSettings
         {
             Configuration = context.MsBuildConfiguration,
             Framework = context.Framework
         });
-        context.CopyFiles("../src/PemsaDebug/bin/native/*", $"../src/PemsaDebug/bin/{context.MsBuildConfiguration}/{context.Framework}");
-        context.CopyDirectory("../carts", $"../src/PemsaDebug/bin/{context.MsBuildConfiguration}/{context.Framework}/carts");
+        context.CopyFiles($"../src/{context.Project}/bin/native/*", $"../src/{context.Project}/bin/{context.MsBuildConfiguration}/{context.Framework}");
+        context.CopyDirectory("../carts", $"../src/{context.Project}/bin/{context.MsBuildConfiguration}/{context.Framework}/carts");
         
     }
 }
@@ -89,7 +91,7 @@ public sealed class RunTask : FrostingTask<BuildContext>
 {
     public override void Run(BuildContext context)
     {
-        context.DotNetRun("../src/PemsaDebug/PemsaDebug.csproj", new DotNetRunSettings
+        context.DotNetRun($"../src/{context.Project}/{context.Project}.csproj", new DotNetRunSettings
         {
             Configuration = context.MsBuildConfiguration,
             Framework = context.Framework,
