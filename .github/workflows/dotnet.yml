@@ -9,23 +9,20 @@ on:
   pull_request:
     branches: [ "main" ]
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
   build:
     if: ${{ !contains(github.event.head_commit.message, 'CISkip') }}
     strategy:
       matrix:
-       os: [ubuntu-20.04, windows-2019, macos-11]
+      #  os: [ubuntu-20.04, windows-2019, macos-11]
+      os: [ubuntu-20.04]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2.4.2
 
       - name: Recursive submodule checkout
-        run: 'git submodule update --init --recursive'
+        run: git submodule update --init --recursive
       
       - name: Setup .NET Core 3.1 SDK (CakeBuild)
         uses: actions/setup-dotnet@v2.1.0
@@ -40,8 +37,12 @@ jobs:
       - name: Install CMake
         uses: Symbitic/install-cmake@v0.1.0
         
-      - name: Build
+      - name: Build (Unix)
+        if: ${{ matrix.os != 'windows-2019'}}
         run: ./build.sh
+      - name: Build (Win)
+        if: ${{ matrix.os == 'windows-2019'}}
+        run: .\build.ps1
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v3.1.0

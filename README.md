@@ -3,7 +3,7 @@ Pico-8 / Pemsa Debugger and dev env
 ___
 ## Installation:
 As this is highly ***experimental*** there is no pre-built packages for the debugger, however you can still try it out:
-
+***__Currently only the linux builds succeed, cake is confusing so idk exactly how to fix this but I think macOS & Windows need some extra args passed to `cmake --build ...`__***
 ### CI Artifacts
 Every time a code change is made, github builds the debugger for Windows, Linux, and MacOS, then uploads the builds as "artifacts" you can easily download and run by following these steps:
 - Install the [.NET 6 ***Runtime***](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) 
