@@ -85,23 +85,24 @@ public sealed class BuildTask : FrostingTask<BuildContext>
     }
 }
 
-[TaskName("Run")]
-[IsDependentOn(typeof(BuildTask))]
-public sealed class RunTask : FrostingTask<BuildContext>
-{
-    public override void Run(BuildContext context)
-    {
-        context.DotNetRun($"../src/{context.Project}/{context.Project}.csproj", new DotNetRunSettings
-        {
-            Configuration = context.MsBuildConfiguration,
-            Framework = context.Framework,
-            NoBuild = true,
-            NoRestore = true
-        });
-    }
-}
+// [TaskName("Run")]
+// [IsDependentOn(typeof(BuildTask))]
+// public sealed class RunTask : FrostingTask<BuildContext>
+// {
+//     public override void Run(BuildContext context)
+//     {
+//         context.DotNetRun($"../src/{context.Project}/{context.Project}.csproj", new DotNetRunSettings
+//         {
+//             Configuration = context.MsBuildConfiguration,
+//             Framework = context.Framework,
+//             NoBuild = true,
+//             NoRestore = true
+//         });
+//     }
+// }
 
-[IsDependentOn(typeof(RunTask))]
+// [IsDependentOn(typeof(RunTask))]
+[IsDependentOn(typeof(BuildTask))]
 public sealed class Default : FrostingTask
 {
 }
