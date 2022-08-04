@@ -38,10 +38,10 @@ jobs:
         uses: Symbitic/install-cmake@v0.1.0
         
       - name: Build (Unix)
-        if: ${{ matrix.os != 'windows-2019'}}
+        if: matrix.os != 'windows-2019'
         run: ./build.sh
       - name: Build (Win)
-        if: ${{ matrix.os == 'windows-2019'}}
+        if: matrix.os == 'windows-2019'
         run: .\build.ps1
 
       - name: Upload Build Artifacts
