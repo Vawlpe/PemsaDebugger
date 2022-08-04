@@ -57,6 +57,7 @@ public sealed class BuildNativePemsaTask : FrostingTask<BuildContext>
         {
             BinaryPath = $"../src/{context.Project}/bin/native/pemsa-invoke",
             CleanFirst = true,
+            Options = context.IsRunningOnMacOs() ? new[] { "--", "-fdeclspec" } : null,
         });
         context.CopyFiles("../src/pemsa-pinvoke/dist/*", $"../src/{context.Project}/bin/native");
     }
