@@ -40,7 +40,7 @@ jobs:
         uses: Symbitic/install-cmake@v0.1.0
         
       - name: Build
-        run: build.sh
+        run: ./build.sh
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v3.1.0
