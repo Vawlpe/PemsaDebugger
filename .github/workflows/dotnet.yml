@@ -1,0 +1,50 @@
+name: Build
+
+env:
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    if: ${{ !contains(github.event.head_commit.message, 'CISkip') }}
+    strategy:
+      matrix:
+       os: [ubuntu-20.04, windows-2019, macos-11]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.2
+        with:
+          submodules: true
+      
+      - name: Setup .NET Core 3.1 SDK (CakeBuild)
+        uses: actions/setup-dotnet@v2.1.0
+        with:
+          dotnet-version: '3.1'
+
+      - name: Setup .NET 6 SDK (PemsaDebugger)
+        uses: actions/setup-dotnet@v2.1.0
+        with:
+          dotnet-version: '6.0'
+          
+      - name: Install CMake
+        uses: Symbitic/install-cmake@v0.1.0
+        
+      - name: Build
+        run: build.sh
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v3.1.0
+        with:
+          name: ${{ matrix.os }}
+          path: ./src/PemsaDebugger/bin/Debug/net6.0/
+          retention-days: 30
